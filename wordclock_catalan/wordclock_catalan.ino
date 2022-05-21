@@ -662,7 +662,7 @@ void timeToArray(uint8_t hours,uint8_t minutes){
       printLes();
     }
     printHours(hours);
-    if (minutes < 60) {
+    if (minutes >= 55) {
       printMenysCincFullHour();
     }
     else if (minutes >= 5) {
