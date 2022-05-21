@@ -538,6 +538,28 @@ void printICinc() {
   gridAddPixel(10,3);  
 }
 
+void printMenysCincFullHour() {
+  Serial.print("MENYS ");
+  gridAddPixel(0,9);
+  gridAddPixel(1,9);
+  gridAddPixel(2,9);
+  gridAddPixel(3,9);
+  Serial.print("CINC ");
+  gridAddPixel(7,9);
+  gridAddPixel(8,9);
+  gridAddPixel(9,9);
+  gridAddPixel(10,9);
+}
+
+void printICincFullHour() {
+  Serial.print("I ");
+  gridAddPixel(5,9);
+  Serial.print("CINC ");  
+  gridAddPixel(7,9);
+  gridAddPixel(8,9);
+  gridAddPixel(9,9);
+  gridAddPixel(10,9);  
+}
 void printEs() {
   Serial.print("ÉS ");
   gridAddPixel(0,0);
@@ -641,10 +663,10 @@ void timeToArray(uint8_t hours,uint8_t minutes){
     }
     printHours(hours);
     if (minutes < 60) {
-      printMenysCinc();
+      printMenysCincFullHour();
     }
     else if (minutes >= 5) {
-      printICinc();
+      printICincFullHour();
     }
   }  
   // És un quart
