@@ -521,6 +521,7 @@ void printMenysCinc() {
   gridAddPixel(1,3);
   gridAddPixel(2,3);
   gridAddPixel(3,3);
+  gridAddPixel(4,3);
   Serial.print("CINC ");
   gridAddPixel(7,3);
   gridAddPixel(8,3);
@@ -544,6 +545,7 @@ void printMenysCincFullHour() {
   gridAddPixel(1,9);
   gridAddPixel(2,9);
   gridAddPixel(3,9);
+  gridAddPixel(4,9);
   Serial.print("CINC ");
   gridAddPixel(7,9);
   gridAddPixel(8,9);
