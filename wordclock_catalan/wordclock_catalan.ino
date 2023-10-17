@@ -592,7 +592,7 @@ void printQuartOrQuarts(boolean plural) {
 
 
 void printArticle(uint8_t hours) {
-  if (hours == 1) {
+  if (hours == 1 || hours == 11) {
       Serial.print("D' ");      
       gridAddPixel(2,4);
   } else {
