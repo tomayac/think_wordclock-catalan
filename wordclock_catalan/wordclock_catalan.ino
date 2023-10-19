@@ -469,10 +469,10 @@ void printHours(uint8_t hours) {
       break;
   case 5:      
       Serial.print("CINC");
-      gridAddPixel(7,9);
-      gridAddPixel(8,9);
-      gridAddPixel(9,9);
-      gridAddPixel(10,9);
+      gridAddPixel(0,2);
+      gridAddPixel(1,2);
+      gridAddPixel(2,2);
+      gridAddPixel(3,2);
       break;
   case 6:      
       Serial.print("SIS");
