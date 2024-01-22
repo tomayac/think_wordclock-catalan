@@ -1,8 +1,8 @@
 /*
  * Sourcecode for wordclock (german)
- * 
+ *
  * created by techniccontroller 06.12.2020
- * 
+ *
  * changelog:
  * 03.04.2021: add DCF77 signal quality check
  * 04.04.2021: add update intervall for RTC update
@@ -11,12 +11,11 @@
  * 13.05.2022: add PIR sensor to interrupt nightmode while PIR_PIN == HIGH (FEATURE-REQUEST)
  */
 #include "RTClib.h"             //https://github.com/adafruit/RTClib
-#include "DCF77.h"              //https://github.com/thijse/Arduino-DCF77                
+#include "DCF77.h"              //https://github.com/thijse/Arduino-DCF77
 #include <TimeLib.h>            //https://github.com/PaulStoffregen/Time
 #include <Adafruit_GFX.h>       //https://github.com/adafruit/Adafruit-GFX-Library
 #include <Adafruit_NeoMatrix.h> //https://github.com/adafruit/Adafruit_NeoMatrix
 #include <EEPROM.h>
-
 
 // definition of pins
 #define DCF_PIN 2               // Connection pin to DCF 77 device
@@ -37,10 +36,10 @@ char date_s[11];
 #define LOWER_LIGHT_THRSH 800   // lower threshold for lightsensor (below this value brightness is always 100%)
 #define CENTER_ROW (HEIGHT/2)   // id of center row
 #define CENTER_COL (WIDTH/2)    // id of center column
-#define NIGHTMODE_START 22      // start hour of nightmode (22 <=> 22:00)
-#define NIGHTMODE_END 6         // end hour of nightmode (6 <=> 6:00)
+#define NIGHTMODE_START 0      // start hour of nightmode (0 <=> 00:00)
+#define NIGHTMODE_END 7         // end hour of nightmode (7 <=> 7:00)
 
-// create DCF77 object  
+// create DCF77 object
 DCF77 DCF = DCF77(DCF_PIN,digitalPinToInterrupt(DCF_PIN));
 
 // create RTC object
@@ -62,7 +61,7 @@ const uint16_t colors[] = {
   matrix.Color(255, 255, 0),    // yellow
   matrix.Color(255, 0, 200),    // magenta
   matrix.Color(128, 128, 128),  // white (darker)
-  matrix.Color(0, 255, 0),      // green 
+  matrix.Color(0, 255, 0),      // green
   matrix.Color(0, 0, 255) };    // blue
 
 // definition of global variables
@@ -96,14 +95,14 @@ void gridAddPixel(uint8_t x, uint8_t y);
 void gridFlush(void);
 void drawOnMatrix(void);
 void timeToArray(uint8_t hours, uint8_t minutes);
-void printHours(uint8_t hours);
+void printHours(uint8_t hours, uint8_t minutes);
 
 void setup() {
   // enable serial output
   Serial.begin(9600);
 
   // Measure DCF signal quality
-  //checkDCFSignal();
+  // checkDCFSignal();
 
   // Init DCF
   DCF.Start();
@@ -117,7 +116,7 @@ void setup() {
 
   // get active color from last power cycle
   EEPROM.get(EE_ADDRESS_COLOR, activeColorID);
-  
+
   // check if in the last 3 seconds was a power cycle
   // if yes, so change to next color mode
   long laststartseconds = 0;
@@ -153,9 +152,9 @@ void setup() {
   // Init LED matrix
   matrix.begin();
   matrix.setBrightness(100);
-  
+
   // quick matrix test
-  for(int i=1; i<(WIDTH*HEIGHT); i++){    
+  for(int i=1; i<(WIDTH*HEIGHT); i++){
     matrix.drawPixel((i-1)%WIDTH, (i-1)/HEIGHT, matrix.Color(0,0,0));
     matrix.drawPixel(i%WIDTH, i/HEIGHT, matrix.Color(120,150,150));
     matrix.show();
@@ -184,7 +183,7 @@ void loop() {
   Serial.println(brightness);
   matrix.setBrightness(brightness*2);
 
-  
+
   // Print current date and time
   DateTime rtctime = rtc.now();
   Serial.print("RTC: ");
@@ -202,7 +201,7 @@ void loop() {
   // clear matrix
   matrix.fillScreen(matrix.Color(0, 0, 0));
 
-  
+
   // add condition if nightmode (LEDs = OFF) should be activated
   // turn off LEDs between NIGHTMODE_START and NIGHTMODE_END
   uint8_t nightmode = false;
@@ -215,10 +214,10 @@ void loop() {
     // nightmode duration during day (e.g. 18:00 -> 23:00)
     nightmode = true;
   }
-  
+
   if(!nightmode){
     // nightmode is not active -> draw on Matrix, as normal
-    
+
     // if color mode is set to 0, a color wheel will be shown in background
     if(activeColorID == 0){
       // draw colorwheel on matrix
@@ -232,7 +231,7 @@ void loop() {
   else{
     Serial.println("Nightmode is active -> LED are OFF");
   }
-  
+
   // send the commands to the LEDs
   matrix.show();
 
@@ -242,7 +241,7 @@ void loop() {
   } else {
     delay(5000);
   }
-  
+
 }
 
 // Draws a 360 degree colorwheel on the matrix rotated by offset
@@ -296,15 +295,15 @@ void checkDCFSignal(){
 
   //Do measurement over 10 impules, one impulse takes exactly one Second
   int q = DCF77signalQuality(10);
-  //If no change between HIGH and LOW was detected at the connection, 
-  //this means in 99.99% of all cases that the DCF receiver does not work 
-  //because with extremely poor reception you have changes, but you cannot evaluate them. 
+  //If no change between HIGH and LOW was detected at the connection,
+  //this means in 99.99% of all cases that the DCF receiver does not work
+  //because with extremely poor reception you have changes, but you cannot evaluate them.
   if (!q) {Serial.print("# (Check connection!)");}
   for (int i = 0; i < q; i++) {
     Serial.print(">");
   }
   Serial.println("");
-  
+
 }
 
 // check signalquality of DCF77 receiver (code from Ralf Bohnen, 2013
@@ -312,7 +311,7 @@ int DCF77signalQuality(int pulses) {
   int prevSensorValue=0;
   unsigned long loopTime = 10000; //Impuls Länge genau eine Sekunde
   //Da wir ja mitten in einem Impuls einsteigen könnten, verwerfen wir den ersten.
-  int rounds = -1; 
+  int rounds = -1;
   unsigned long gagingStart = 0;
   unsigned long waitingPeriod = 0;
   int overallChange = 0;
@@ -324,11 +323,11 @@ int DCF77signalQuality(int pulses) {
     gagingStart = micros();
     int sensorValue = digitalRead(DCF_PIN);
     //Wenn von LOW nach HIGH gewechselt wird beginnt ein neuer Impuls
-    if (sensorValue==1 && prevSensorValue==0) { 
+    if (sensorValue==1 && prevSensorValue==0) {
       rounds++;
       if (rounds > 0 && rounds < pulses + 1) {overallChange+= change;}
       if (rounds == pulses) { return overallChange /pulses;}
-      change = 0; 
+      change = 0;
     }
     prevSensorValue = sensorValue;
     change++;
@@ -347,7 +346,7 @@ int DCF77signalQuality(int pulses) {
 // Checks for new time from DCF77 and updates RTC time
 void checkForNewDCFTime(DateTime now){
   // check if new time from DCF77 is available
-  time_t DCFtime = DCF.getTime(); 
+  time_t DCFtime = DCF.getTime();
   if (DCFtime!=0)
   {
     setTime(DCFtime);
@@ -386,13 +385,13 @@ void drawOnMatrix(){
     for(int s = 0; s < WIDTH; s++){
       if(grid[z][s] != 0){
         Serial.print("1 ");
-        matrix.drawPixel(s,z,colors[activeColorID]);         
+        matrix.drawPixel(s,z,colors[activeColorID]);
       }
       else{
         Serial.print("0 ");
       }
     }
-    Serial.println();  
+    Serial.println();
   }
 }
 
@@ -427,10 +426,10 @@ void drawOnMatrix(){
 08:00 Són les vuit
 */
 
-void printHours(uint8_t hours) {
+void printHours(uint8_t hours, uint8_t minutes) {
   switch(hours)
   {
-  case 0:      
+  case 0:
       Serial.print("DOTZE");
       gridAddPixel(6,6);
       gridAddPixel(7,6);
@@ -442,23 +441,23 @@ void printHours(uint8_t hours) {
       Serial.print("UNA");
       gridAddPixel(4,4);
       gridAddPixel(5,4);
-      gridAddPixel(6,4);      
+      gridAddPixel(6,4);
       break;
-  case 2:      
+  case 2:
       Serial.print("DUES");
       gridAddPixel(0,5);
       gridAddPixel(1,5);
       gridAddPixel(2,5);
       gridAddPixel(3,5);
       break;
-  case 3:      
+  case 3:
       Serial.print("TRES");
       gridAddPixel(4,5);
       gridAddPixel(5,5);
       gridAddPixel(6,5);
       gridAddPixel(7,5);
       break;
-  case 4:      
+  case 4:
       Serial.print("QUATRE");
       gridAddPixel(0,6);
       gridAddPixel(1,6);
@@ -467,52 +466,59 @@ void printHours(uint8_t hours) {
       gridAddPixel(4,6);
       gridAddPixel(5,6);
       break;
-  case 5:      
+  case 5:
       Serial.print("CINC");
-      gridAddPixel(0,2);
-      gridAddPixel(1,2);
-      gridAddPixel(2,2);
-      gridAddPixel(3,2);
+      if (minutes >= 10 && minutes < 55) {
+        gridAddPixel(7,9);
+        gridAddPixel(8,9);
+        gridAddPixel(9,9);
+        gridAddPixel(10,9);
+      } else {
+        gridAddPixel(0,2);
+        gridAddPixel(1,2);
+        gridAddPixel(2,2);
+        gridAddPixel(3,2);
+      }
       break;
-  case 6:      
+  case 6:
       Serial.print("SIS");
       gridAddPixel(0,8);
       gridAddPixel(1,8);
-      gridAddPixel(2,8);      
+      gridAddPixel(2,8);
       break;
-  case 7:      
+  case 7:
       Serial.print("SET");
       gridAddPixel(7,5);
       gridAddPixel(8,5);
-      gridAddPixel(9,5);      
+      gridAddPixel(9,5);
       break;
-  case 8:      
+  case 8:
       Serial.print("VUIT");
       gridAddPixel(0,7);
       gridAddPixel(1,7);
       gridAddPixel(2,7);
       gridAddPixel(3,7);
       break;
-  case 9:      
+  case 9:
       Serial.print("NOU");
       gridAddPixel(4,7);
       gridAddPixel(5,7);
-      gridAddPixel(6,7);      
+      gridAddPixel(6,7);
       break;
-  case 10:      
+  case 10:
       Serial.print("DEU");
       gridAddPixel(5,8);
       gridAddPixel(6,8);
-      gridAddPixel(7,8);      
+      gridAddPixel(7,8);
       break;
-  case 11:      
+  case 11:
       Serial.print("ONZE");
       gridAddPixel(7,7);
       gridAddPixel(8,7);
       gridAddPixel(9,7);
       gridAddPixel(10,7);
       break;
-  }  
+  }
 }
 
 void printMenysCinc() {
@@ -532,11 +538,11 @@ void printMenysCinc() {
 void printICinc() {
   Serial.print("I ");
   gridAddPixel(5,3);
-  Serial.print("CINC ");  
+  Serial.print("CINC ");
   gridAddPixel(7,3);
   gridAddPixel(8,3);
   gridAddPixel(9,3);
-  gridAddPixel(10,3);  
+  gridAddPixel(10,3);
 }
 
 void printMenysCincFullHour() {
@@ -556,11 +562,11 @@ void printMenysCincFullHour() {
 void printICincFullHour() {
   Serial.print("I ");
   gridAddPixel(5,9);
-  Serial.print("CINC ");  
+  Serial.print("CINC ");
   gridAddPixel(7,9);
   gridAddPixel(8,9);
   gridAddPixel(9,9);
-  gridAddPixel(10,9);  
+  gridAddPixel(10,9);
 }
 void printEs() {
   Serial.print("ÉS ");
@@ -571,39 +577,39 @@ void printEs() {
 void printSon() {
   Serial.print("SÓN ");
   gridAddPixel(1,0);
-  gridAddPixel(2,0);  
-  gridAddPixel(3,0);  
+  gridAddPixel(2,0);
+  gridAddPixel(3,0);
 }
 
-void printQuartOrQuarts(boolean plural) {  
+void printQuartOrQuarts(boolean plural) {
   Serial.print("QUART");
   gridAddPixel(4,2);
-  gridAddPixel(5,2);  
-  gridAddPixel(6,2);  
+  gridAddPixel(5,2);
+  gridAddPixel(6,2);
   gridAddPixel(7,2);
-  gridAddPixel(8,2);      
+  gridAddPixel(8,2);
   if (!plural) {
     Serial.print(" ");
     return;
   }
-  Serial.print("S ");  
-  gridAddPixel(9,2);  
+  Serial.print("S ");
+  gridAddPixel(9,2);
 }
 
 
 void printArticle(uint8_t hours) {
   if (hours == 1 || hours == 11) {
-      Serial.print("D' ");      
+      Serial.print("D' ");
       gridAddPixel(2,4);
   } else {
     Serial.print("DE ");
     gridAddPixel(0,4);
     gridAddPixel(1,4);
-  }  
+  }
 }
 
 void printLa() {
-  Serial.print("LA ");      
+  Serial.print("LA ");
   gridAddPixel(5,0);
   gridAddPixel(6,0);
 }
@@ -618,41 +624,38 @@ void printLes() {
 void printUn() {
   Serial.print("UN ");
   gridAddPixel(8,0);
-  gridAddPixel(9,0);  
+  gridAddPixel(9,0);
 }
 
 void printDos() {
   Serial.print("DOS ");
   gridAddPixel(0,1);
-  gridAddPixel(1,1);  
-  gridAddPixel(2,1);  
+  gridAddPixel(1,1);
+  gridAddPixel(2,1);
 }
 
 void printTres() {
   Serial.print("TRES ");
   gridAddPixel(7,1);
-  gridAddPixel(8,1);  
+  gridAddPixel(8,1);
   gridAddPixel(9,1);
-  gridAddPixel(10,1);    
+  gridAddPixel(10,1);
 }
 
 // Converts the given time in grid representation
-void timeToArray(uint8_t hours,uint8_t minutes){ 
-  
+void timeToArray(uint8_t hours,uint8_t minutes){
+
   //clear grid
   gridFlush();
-  
+
   //start filling grid with pixels
-  
+
   //convert hours to 12h format
   if (hours >= 12) {
     hours -= 12;
   }
   if (minutes >= 10) {
     hours++;
-  }
-  if (hours == 12) {
-    hours = 0;
   }
 
   if (minutes >= 55 || minutes < 10) {
@@ -663,14 +666,14 @@ void timeToArray(uint8_t hours,uint8_t minutes){
       printSon();
       printLes();
     }
-    printHours(hours);
+    printHours(hours, minutes);
     if (minutes >= 55) {
       printMenysCincFullHour();
     }
     else if (minutes >= 5) {
       printICincFullHour();
     }
-  }  
+  }
   // És un quart
   else if (minutes >= 10 && minutes < 25) {
     printEs();
@@ -682,7 +685,7 @@ void timeToArray(uint8_t hours,uint8_t minutes){
       printICinc();
     }
     printArticle(hours);
-    printHours(hours);
+    printHours(hours, minutes);
   }
   // Són dos quarts
   else if (minutes >= 25 && minutes < 40) {
@@ -695,8 +698,8 @@ void timeToArray(uint8_t hours,uint8_t minutes){
       printICinc();
     }
     printArticle(hours);
-    printHours(hours);       
-  } 
+    printHours(hours, minutes);
+  }
   // Són tres quarts
   else if (minutes >= 40 && minutes < 55) {
     printSon();
@@ -708,16 +711,16 @@ void timeToArray(uint8_t hours,uint8_t minutes){
       printICinc();
     }
     printArticle(hours);
-    printHours(hours);                  
+    printHours(hours, minutes);
   }
 
   //separate LEDs for minutes in an additional row
   {
   switch (minutes%5)
-        { 
+        {
           case 0:
             break;
-              
+
           case 1:
             gridAddPixel(0,10);
             break;
@@ -742,5 +745,5 @@ void timeToArray(uint8_t hours,uint8_t minutes){
         }
   }
 
-  Serial.println();        
+  Serial.println();
 }
