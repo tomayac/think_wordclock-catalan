@@ -651,7 +651,7 @@ void timeToArray(uint8_t hours,uint8_t minutes){
   //start filling grid with pixels
 
   //convert hours to 12h format
-  if (hours >= 12) {
+  if (hours > 12) {
     hours -= 12;
   }
   if (minutes >= 10) {
