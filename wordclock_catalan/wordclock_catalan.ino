@@ -94,7 +94,6 @@ void checkForNewDCFTime(DateTime now);
 void gridAddPixel(uint8_t x, uint8_t y);
 void gridFlush(void);
 void drawOnMatrix(void);
-void timeToArray(uint8_t hours, uint8_t minutes);
 void printHours(uint8_t hours, uint8_t minutes);
 
 void setup() {
@@ -430,6 +429,7 @@ void printHours(uint8_t hours, uint8_t minutes) {
   switch(hours)
   {
   case 0:
+  case 12:
       Serial.print("DOTZE");
       gridAddPixel(6,6);
       gridAddPixel(7,6);
@@ -651,13 +651,12 @@ void timeToArray(uint8_t hours,uint8_t minutes){
   //start filling grid with pixels
 
   //convert hours to 12h format
-  if (hours > 12) {
+  if (hours >= 12) {
     hours -= 12;
   }
   if (minutes >= 10) {
     hours++;
   }
-
   if (minutes >= 55 || minutes < 10) {
     if (hours == 1) {
       printEs();
